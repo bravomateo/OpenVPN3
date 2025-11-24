@@ -1,0 +1,1 @@
+https://openvpn.net/cloud-docs/tutorials/configuration-tutorials/connectors/operating-systems/linux/tutorial--learn-to-install-and-control-the-openvpn-3-client.html?utm_source=chatgpt.com
