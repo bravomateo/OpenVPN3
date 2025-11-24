@@ -1,24 +1,58 @@
+Perfecto, **esto explica completamente el error** ❗
 
+Tu Raspberry Pi OS está reportando:
 
-# ✅ **CÓMO INSTALAR OPENVPN3 CORRECTAMENTE EN RASPBERRY PI OS 64-bit**
+```
+VERSION_CODENAME=trixie
+```
 
-### 1️⃣ Verifica tu arquitectura:
+➡️ **TRIXIE = Debian 13**
+➡️ **OpenVPN3 NO soporta TRIXIE oficialmente todavía**, solo soporta hasta **Debian 12 (bookworm)**.
 
-Debe ser **aarch64** (arm64):
+Por eso el repositorio:
+
+```
+https://packages.openvpn.net/openvpn3/debian trixie main
+```
+
+te da estos errores:
+
+* “Missing key…”
+* “signature verification failed”
+* “El repositorio no está firmado”
+* “no admite la arquitectura armhf”
+* “No se puede actualizar un repositorio como este de forma segura”
+
+---
+
+# ✅ SOLUCIÓN REALISTA SEGÚN TU SITUACIÓN
+
+Tienes 3 opciones:
+
+---
+
+# **✔ OPCIÓN 1 (RECOMENDADA): Usar el repositorio de Debian 12 (bookworm) aunque tu sistema sea trixie**
+
+OpenVPN3 funciona **sin problemas** en Raspberry Pi OS Trixie si apuntas al repositorio de **bookworm**.
+
+Haz esto:
+
+---
+
+### 1️⃣ Elimina el repositorio que agregaste antes
 
 ```bash
-uname -m
-```
-
-Debe mostrar:
-
-```
-aarch64
+sudo rm /etc/apt/sources.list.d/openvpn3.list
+sudo rm /etc/apt/keyrings/openvpn.asc
+sudo apt update
 ```
 
 ---
 
-### 2️⃣ Crea el keyring:
+### 2️⃣ Usa *bookworm* como DISTRO para OpenVPN3
+
+NO uses tu `DISTRO=trixie`.
+Forza **bookworm**.
 
 ```bash
 sudo mkdir -p /etc/apt/keyrings
@@ -27,50 +61,23 @@ curl -fsSL https://packages.openvpn.net/packages-repo.gpg | sudo tee /etc/apt/ke
 
 ---
 
-### 3️⃣ Detecta tu distribución **correctamente**
-
-No uses solo `lsb_release -cs` porque Raspberry Pi OS “bookworm” a veces devuelve valores que OpenVPN NO soporta directamente.
-
-Ejecuta:
+### 3️⃣ Agrega el repositorio de bookworm **pero solo para arm64**
 
 ```bash
-DISTRO=$(awk -F= '/^VERSION_CODENAME/{print $2}' /etc/os-release)
-echo $DISTRO
-```
-
-Debe salir:
-
-```
-bookworm
+echo "deb [arch=arm64 signed-by=/etc/apt/keyrings/openvpn.asc] https://packages.openvpn.net/openvpn3/debian bookworm main" | sudo tee /etc/apt/sources.list.d/openvpn3.list
 ```
 
 ---
 
-### 4️⃣ Agrega el repositorio PERO SOLO PARA ARM64:
-
-```bash
-echo "deb [arch=arm64 signed-by=/etc/apt/keyrings/openvpn.asc] https://packages.openvpn.net/openvpn3/debian $DISTRO main" | \
-sudo tee /etc/apt/sources.list.d/openvpn3.list
-```
-
----
-
-### 5️⃣ Actualiza:
+### 4️⃣ Actualiza paquetes
 
 ```bash
 sudo apt update
 ```
 
-⚠️ **Si aún ves errores de armhf**, debes deshabilitar armhf temporalmente:
-
-```bash
-echo "APT::Architectures { \"arm64\"; };" | sudo tee /etc/apt/apt.conf.d/99arm64
-sudo apt update
-```
-
 ---
 
-### 6️⃣ Instala:
+### 5️⃣ Instala OpenVPN 3
 
 ```bash
 sudo apt install openvpn3
@@ -78,27 +85,5 @@ sudo apt install openvpn3
 
 ---
 
-# 📌 **Si quieres, puedo revisar tu `/etc/os-release` para confirmar qué repositorio debes usar**
 
-Solo ejecuta:
 
-```bash
-cat /etc/os-release
-```
-
-y envíame el resultado.
-
----
-
-# 📌 **Si deseas eliminar por completo el repositorio de nuevo**, usa:
-
-```bash
-sudo rm /etc/apt/sources.list.d/openvpn3.list
-sudo rm /etc/apt/keyrings/openvpn.asc
-sudo rm /etc/apt/apt.conf.d/99arm64
-sudo apt update
-```
-
----
-
-Si quieres, también puedo darte un **script completo** para automatizar toda la instalación de forma limpia.
